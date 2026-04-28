@@ -17,8 +17,12 @@ console.log(`ImageShare starting on port ${env.PORT}`);
 
 // Run migrations and ensure bucket on startup
 async function bootstrap() {
-  // Create table if not exists
   const db = getDb();
+
+  // Enable uuid extension
+  await db.execute(sql`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
+
+  // Create table if not exists
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS "image" (
       "id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -40,7 +44,6 @@ bootstrap()
   .then(() => console.log("Bootstrap complete"))
   .catch((e) => {
     console.error("Bootstrap failed:", e?.message || e);
-    // Don't exit — let the health check report the issue
   });
 
 import { serve } from "@hono/node-server";

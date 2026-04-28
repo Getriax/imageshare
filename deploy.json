@@ -1,0 +1,24 @@
+{
+  "runtime": "node",
+  "dockerfile": "Dockerfile",
+  "port": 3000,
+  "health": {
+    "path": "/health",
+    "expected_status": 200,
+    "expected_body_contains": "\"ok\":true"
+  },
+  "env_required": [
+    "DATABASE_URL",
+    "S3_ENDPOINT",
+    "S3_BUCKET",
+    "S3_ACCESS_KEY",
+    "S3_SECRET_KEY",
+    "APP_BASE_URL"
+  ],
+  "env_provided": {},
+  "dependencies": [
+    { "kind": "postgres", "name": "imageshare_db", "scope": "database" },
+    { "kind": "minio", "name": "imageshare-blob", "scope": "bucket", "access": "public" }
+  ],
+  "resources": { "cpu": 1, "memory_mb": 512 }
+}

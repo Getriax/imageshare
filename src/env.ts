@@ -1,5 +1,5 @@
 function validateEnv() {
-  const required = ["DATABASE_URL", "S3_ENDPOINT", "S3_BUCKET", "S3_ACCESS_KEY", "S3_SECRET_KEY", "APP_BASE_URL"] as const;
+  const required = ["DATABASE_URL", "APP_BASE_URL"] as const;
   const missing: string[] = [];
   for (const key of required) {
     if (!process.env[key] || process.env[key]!.trim() === "") {
@@ -11,10 +11,6 @@ function validateEnv() {
   }
   return {
     DATABASE_URL: process.env.DATABASE_URL!,
-    S3_ENDPOINT: process.env.S3_ENDPOINT!,
-    S3_BUCKET: process.env.S3_BUCKET!,
-    S3_ACCESS_KEY: process.env.S3_ACCESS_KEY!,
-    S3_SECRET_KEY: process.env.S3_SECRET_KEY!,
     APP_BASE_URL: process.env.APP_BASE_URL!,
     PORT: parseInt(process.env.PORT ?? "3000", 10),
   };

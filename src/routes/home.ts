@@ -1,14 +1,11 @@
 import { Hono } from "hono";
 import { html } from "hono/html";
-import { stream } from "hono/streaming";
 import { getDb } from "../db/client.js";
 import { images } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { getEnv } from "../env.js";
 import { generateSlug } from "../util/slug.js";
-import { putImage } from "../blob/s3.js";
-import { GetObjectCommand } from "@aws-sdk/client-s3";
-import { getS3Client } from "../blob/s3.js";
+import { putImage } from "../blob/storage.js";
 
 const app = new Hono();
 
@@ -79,7 +76,6 @@ app.post("/upload", async (c) => {
       inserted = true;
       break;
     } catch (err: any) {
-      // If it's a unique violation, retry
       if (err?.code === "23505") {
         continue;
       }
@@ -118,7 +114,7 @@ app.get("/i/:slug", async (c) => {
 </html>`);
 });
 
-// GET /raw/:slug — redirect to S3 (public bucket)
+// GET /raw/:slug — serve the image directly
 app.get("/raw/:slug", async (c) => {
   const slug = c.req.param("slug");
   const db = getDb();
@@ -128,10 +124,14 @@ app.get("/raw/:slug", async (c) => {
     return c.text("Not found", 404);
   }
 
-  const env = getEnv();
-  // Public bucket: redirect directly to the object URL
-  const url = `${env.S3_ENDPOINT}/${env.S3_BUCKET}/${row.blobKey}`;
-  return c.redirect(url, 302);
+  const { getImage } = await import("../blob/storage.js");
+  const buf = await getImage(row.blobKey);
+  return new Response(new Uint8Array(buf), {
+    headers: {
+      "Content-Type": row.contentType,
+      "Content-Length": String(buf.length),
+    },
+  });
 });
 
 export default app;

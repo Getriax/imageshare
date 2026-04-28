@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { sql } from "drizzle-orm";
 import { getDb } from "../db/client.js";
-import { headBucket } from "../blob/s3.js";
+import { headStorage, ensureUploadDir } from "../blob/storage.js";
 
 const app = new Hono();
 
@@ -16,7 +16,8 @@ app.get("/health", async (c) => {
   } catch {}
 
   try {
-    blobOk = await headBucket();
+    await ensureUploadDir();
+    blobOk = await headStorage();
   } catch {}
 
   const ok = dbOk && blobOk;

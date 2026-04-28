@@ -2,9 +2,9 @@ import { Hono } from "hono";
 import homeRoutes from "./routes/home.js";
 import healthRoutes from "./routes/health.js";
 import { getEnv } from "./env.js";
-import { ensureBucket } from "./blob/s3.js";
 import { getDb } from "./db/client.js";
 import { sql } from "drizzle-orm";
+import { ensureUploadDir } from "./blob/storage.js";
 
 const app = new Hono();
 
@@ -15,12 +15,12 @@ const env = getEnv();
 
 console.log(`ImageShare starting on port ${env.PORT}`);
 
-// Run migrations and ensure bucket on startup
+// Run migrations and ensure upload dir on startup
 async function bootstrap() {
   const db = getDb();
 
   // Enable uuid extension
-  await db.execute(sql`CREATE EXTENSION IF NOT EXISTS "pgcrypto";`);
+  await db.execute(sql`CREATE EXTENSION IF NOT EXISTS "pgcrypto"`);
 
   // Create table if not exists
   await db.execute(sql`
@@ -35,9 +35,9 @@ async function bootstrap() {
   `);
   console.log("Database migration ensured");
 
-  // Ensure bucket exists
-  await ensureBucket();
-  console.log("Bucket ensured");
+  // Ensure upload dir
+  await ensureUploadDir();
+  console.log("Upload directory ensured");
 }
 
 bootstrap()
